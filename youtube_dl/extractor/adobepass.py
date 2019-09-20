@@ -1494,9 +1494,10 @@ class AdobePassIE(InfoExtractor):
                         # elif 'Please wait ...' in provider_redirect_page and "'N'== \"Y\"" in provider_redirect_page:
                         # ABC from non-Verizon IP
                         saml_redirect_url = self._html_search_regex(
-                            r'window\.location\s*=\s*(["\'])(?P<url>.+?)\1',
+                            r'var\s+url\s*=\s*(["\'])(?P<url>.+?)\1',
                             provider_redirect_page,
                             'SAML Redirect URL', group='url')
+                        saml_redirect_url = saml_redirect_url.replace(r'\/', '/').replace(r'\x26','&')
                         saml_login_page = self._download_webpage(
                             saml_redirect_url, video_id,
                             'Downloading SAML Login Page')
