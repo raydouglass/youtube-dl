@@ -88,10 +88,6 @@ from .piksel import PikselIE
 from .videa import VideaIE
 from .twentymin import TwentyMinutenIE
 from .ustream import UstreamIE
-from .openload import (
-    OpenloadIE,
-    VerystreamIE,
-)
 from .videopress import VideoPressIE
 from .rutube import RutubeIE
 from .limelight import LimelightBaseIE
@@ -2102,6 +2098,9 @@ class GenericIE(InfoExtractor):
                 'ext': 'mp4',
                 'title': 'Smoky Barbecue Favorites',
                 'thumbnail': r're:^https?://.*\.jpe?g',
+                'description': 'md5:5ff01e76316bd8d46508af26dc86023b',
+                'upload_date': '20170909',
+                'timestamp': 1504915200,
             },
             'add_ie': [ZypeIE.ie_key()],
             'params': {
@@ -2538,14 +2537,15 @@ class GenericIE(InfoExtractor):
                 dailymail_urls, video_id, video_title, ie=DailyMailIE.ie_key())
 
         # Look for embedded Wistia player
-        wistia_url = WistiaIE._extract_url(webpage)
-        if wistia_url:
-            return {
-                '_type': 'url_transparent',
-                'url': self._proto_relative_url(wistia_url),
-                'ie_key': WistiaIE.ie_key(),
-                'uploader': video_uploader,
-            }
+        wistia_urls = WistiaIE._extract_urls(webpage)
+        if wistia_urls:
+            playlist = self.playlist_from_matches(wistia_urls, video_id, video_title, ie=WistiaIE.ie_key())
+            for entry in playlist['entries']:
+                entry.update({
+                    '_type': 'url_transparent',
+                    'uploader': video_uploader,
+                })
+            return playlist
 
         # Look for SVT player
         svt_url = SVTIE._extract_url(webpage)
@@ -2964,7 +2964,7 @@ class GenericIE(InfoExtractor):
 
         # Look for VODPlatform embeds
         mobj = re.search(
-            r'<iframe[^>]+src=(["\'])(?P<url>(?:https?:)?//(?:www\.)?vod-platform\.net/[eE]mbed/.+?)\1',
+            r'<iframe[^>]+src=(["\'])(?P<url>(?:https?:)?//(?:(?:www\.)?vod-platform\.net|embed\.kwikmotion\.com)/[eE]mbed/.+?)\1',
             webpage)
         if mobj is not None:
             return self.url_result(
@@ -3047,18 +3047,6 @@ class GenericIE(InfoExtractor):
         if twentymin_urls:
             return self.playlist_from_matches(
                 twentymin_urls, video_id, video_title, ie=TwentyMinutenIE.ie_key())
-
-        # Look for Openload embeds
-        openload_urls = OpenloadIE._extract_urls(webpage)
-        if openload_urls:
-            return self.playlist_from_matches(
-                openload_urls, video_id, video_title, ie=OpenloadIE.ie_key())
-
-        # Look for Verystream embeds
-        verystream_urls = VerystreamIE._extract_urls(webpage)
-        if verystream_urls:
-            return self.playlist_from_matches(
-                verystream_urls, video_id, video_title, ie=VerystreamIE.ie_key())
 
         # Look for VideoPress embeds
         videopress_urls = VideoPressIE._extract_urls(webpage)
